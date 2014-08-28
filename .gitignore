@@ -9,3 +9,6 @@ build/
 
 # MacOSX
 .DS_Store
+
+# Go executable
+barriergauss

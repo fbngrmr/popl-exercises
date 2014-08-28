@@ -16,6 +16,11 @@ func main() {
     //fmt.Println(argsWithoutProg)
     //fmt.Println(arg)
 
-    fileName := "test.ppm"
+    fileName := "/Users/fg/Documents/len_full.pgm"
+
     fmt.Println(parseFileName(fileName));
+
+    src,_ := readGrayImage(fileName)
+
+    fmt.Println(len(src))
 }

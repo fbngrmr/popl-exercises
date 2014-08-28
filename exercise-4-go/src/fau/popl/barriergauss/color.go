@@ -1,3 +1,5 @@
+package main
+
 type Color struct {
     r int
     g int

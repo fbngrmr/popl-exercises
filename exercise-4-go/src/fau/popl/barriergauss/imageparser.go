@@ -4,6 +4,9 @@ import (
 		"strings"
 		"errors"
 		"bufio"
+		"bytes"
+		"io"
+		"strconv"
 		"os"
 )
  
@@ -23,11 +26,20 @@ func parseFileName(fileName string) (string, error) {
 func readGrayImage(fileName string) ([][]int, error) {
     fileType, _ := parseFileName(fileName)
 
+    fileHandler_read, err := os.Open(fileName)
+	defer fileHandler_read.Close()
+
+    if err != nil {
+        return nil, errors.New("IOException")
+    }
+
+	reader := bufio.NewReader(fileHandler_read)
+
     switch fileType {
     	case "PGM":
-    		return colors, nil
+    		return parseGray(reader)
     	case "PPM":
-    		return colors, nil
+    		return parseGray(reader)
     }
 
     return nil, errors.New("Cannot extract data" + fileName)
@@ -36,24 +48,39 @@ func readGrayImage(fileName string) ([][]int, error) {
 func readImage(fileName string) ([][]Color, error) {
     fileType, _ := parseFileName(fileName)
 
+    fileHandler_read, err := os.Open(fileName)
+	defer fileHandler_read.Close()
+
+    if err != nil {
+        return nil, errors.New("IOException")
+    }
+
+	reader := bufio.NewReader(fileHandler_read)
+
     switch fileType {
     	case "PGM":
-    		return colors, nil
+    		return parse(reader)
     	case "PPM":
-    		return colors, nil
+    		return parse(reader)
     }
 
     return nil, errors.New("Cannot extract data" + fileName)
 }
 
-//
 
-func parse(r *bufio.Reader, next func(r *bufio.Reader) (Color)) ([][]Color, error) {
-	if checkMagic(r) {
+
+// func parse(r *bufio.Reader, next func(r *bufio.Reader) (Color)) ([][]Color, error) {
+func parse(r *bufio.Reader) ([][]Color, error) {
+	var current_int int
+	var current_color Color
+	magic, _ := checkMagic(r, "P2")
+	if magic {
 		// Skip line
 		readRune(r)
-		width := nextInt(r)
-		height := nextInt(r)
+		current_int, _ = nextInt(r)
+		width := current_int
+		current_int, _ = nextInt(r)
+		height := current_int
 		nextInt(r) // max
 
 		// 2-dimensional array
@@ -64,22 +91,31 @@ func parse(r *bufio.Reader, next func(r *bufio.Reader) (Color)) ([][]Color, erro
 
 	    for h := 0; h < height; h++ {
 	    	for w := 0; w < width; w++ {
-	    		ret[w][h] = nextColor(r);
+	    		current_color,_ = nextColor(r);
+	    		ret[w][h] = current_color
 	    	}
 	    }
 
 	    return ret, nil
 	}
 
-	return nil, errors.New("Cannot parse data" + fileName)
+	return nil, errors.New("Cannot parse data")
 }
 
-func parseGray(r *bufio.Reader, next func(r *bufio.Reader) (int)) ([][]int, error) {
-	if checkMagic(r) {
+// func parseGray(r *bufio.Reader, next func(r *bufio.Reader) (int)) ([][]int, error) {
+func parseGray(r *bufio.Reader) ([][]int, error) {
+	var current_int int
+	var current_gray int
+	magic, _ := checkMagic(r, "P6")
+	if magic {
 		// Skip line
 		readRune(r)
-		width := nextInt(r)
-		height := nextInt(r)
+
+		current_int, _ = nextInt(r)
+		width := current_int
+		current_int, _ = nextInt(r)
+		height := current_int
+
 		nextInt(r) // max
 
 		// 2-dimensional array
@@ -90,48 +126,57 @@ func parseGray(r *bufio.Reader, next func(r *bufio.Reader) (int)) ([][]int, erro
 
 	    for h := 0; h < height; h++ {
 	    	for w := 0; w < width; w++ {
-	    		ret[w][h] = nextGray(r);
+	    		current_gray,_ = nextGray(r)
+	    		ret[w][h] = current_gray
 	    	}
 	    }
 
 		return ret, nil
 	} 
 
-	return nil, errors.New("Cannot parse data" + fileName)
+	return nil, errors.New("Cannot parse data")
 }
 
-func writeGrayImage(fileName string, image int[][]) error {
+func writeGrayImage(fileName string, image [][]int) error {
 	fileType, _ := parseFileName(fileName)
 
     switch fileType {
     	case "PGM":
-    		return colors, nil
+    		return nil
     	case "PPM":
-    		return colors, nil
+    		return nil
     }
 
-    return nil, errors.New("Cannot write data" + fileName)
+    return errors.New("Cannot write data" + fileName)
 }
 
-func writeImage(fileName string, image Color[][]) error {
+func writeImage(fileName string, image [][]Color) error {
     fileType, _ := parseFileName(fileName)
 
     switch fileType {
     	case "PGM":
-    		return colors, nil
+    		return nil
     	case "PPM":
-    		return colors, nil
+    		return nil
     }
 
-    return nil, errors.New("Cannot write data" + fileName)
+    return errors.New("Cannot write data" + fileName)
 }
 
-func checkMagic(s *bufio.Reader, magic string) (bool, error) {
+func checkMagic(r *bufio.Reader, magic string) (bool, error) {
 	buf := make([]byte, len(magic))
 
 	_, err := r.Read(buf)
 
 	return string(buf) == magic, err
+}
+
+func readRune(r *bufio.Reader) (rune, error) {
+	buf := make([]byte, 1)
+
+	_, err := r.Read(buf)
+
+	return bytes.Runes(buf)[0], err
 }
 
 func nextInt(r *bufio.Reader) (int, error) {
@@ -160,10 +205,10 @@ func nextInt(r *bufio.Reader) (int, error) {
 
 func writeInt(value int, w *bufio.Writer) error {
 	_, err := w.WriteString(" " + strconv.Itoa(value))
-	return error
+	return err
 }
 
-func serialize(c [][]Color, w *bufio.Writer) (*bufio.Writer, error) {
+func serialize(image [][]Color, w *bufio.Writer) (*bufio.Writer, error) {
 	max := 255;
 
 	width := len(image)
@@ -178,7 +223,7 @@ func serialize(c [][]Color, w *bufio.Writer) (*bufio.Writer, error) {
 
 	for h := 0; h < height; h++ {
     	for w := 0; w < width; w++ {
-    		writeColor(ret[w][h]);
+    		writeColor(image[w][h]);
     	}
     	w.WriteString("\n")
     }
@@ -188,27 +233,27 @@ func serialize(c [][]Color, w *bufio.Writer) (*bufio.Writer, error) {
 	return w, nil
 }
 
-func serializeGray(c [][]int, w *bufio.Writer) (*bufio.Writer, error) {
+func serializeGray(image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
 	max := 255;
 
 	width := len(image)
 	height := len(image[0])
 
-	w.WriteString("P6\n")
+	writer.WriteString("P6\n")
 
-	w.WriteString(strconv.Itoa(width))
-	w.WriteString(strconv.Itoa(height)  + "\n")
+	writer.WriteString(strconv.Itoa(width))
+	writer.WriteString(strconv.Itoa(height)  + "\n")
 
-	w.WriteString(string(max) + "\n")
+	writer.WriteString(string(max) + "\n")
 
 	for h := 0; h < height; h++ {
     	for w := 0; w < width; w++ {
-    		writeGray(ret[w][h]);
+    		writeGray(image[w][h], writer);
     	}
-    	w.WriteString("\n")
+    	writer.WriteString("\n")
     }
 
-	w.Flush()
+	writer.Flush()
 
-	return w, nil
+	return writer, nil
 }
