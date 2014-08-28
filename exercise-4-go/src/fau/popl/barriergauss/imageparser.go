@@ -37,11 +37,11 @@ func readGrayImage(fileName string) ([][]int, error) {
 
     switch fileType {
     	case "PGM":
-    		pgm := PGMParser{"P6"}
+    		pgm := PGMParser{"P2", []float32{0.3, 0.59, 0.11}}
     		return parseGray(&pgm, reader)
     	case "PPM":
-    		pgm := PGMParser{"P6"}
-    		return parseGray(&pgm, reader)
+    		ppm := PPMParser{"P6"}
+    		return parseGray(&ppm, reader)
     }
 
     return nil, errors.New("Cannot extract data" + fileName)
@@ -61,11 +61,11 @@ func readImage(fileName string) ([][]Color, error) {
 
     switch fileType {
     	case "PGM":
-    		pgm := PGMParser{"P6"}
+    		pgm := PGMParser{"P2", []float32{0.3, 0.59, 0.11}}
     		return parse(&pgm, reader)
     	case "PPM":
-    		pgm := PGMParser{"P6"}
-    		return parse(&pgm, reader)
+    		ppm := PPMParser{"P6"}
+    		return parse(&ppm, reader)
     }
 
     return nil, errors.New("Cannot extract data" + fileName)
@@ -74,10 +74,10 @@ func readImage(fileName string) ([][]Color, error) {
 
 
 // func parse(r *bufio.Reader, next func(r *bufio.Reader) (Color)) ([][]Color, error) {
-func parse(ppmParser PPMParser, r *bufio.Reader) ([][]Color, error) {
+func parse(pxmParser PXMParser, r *bufio.Reader) ([][]Color, error) {
 	var current_int int
 	var current_color Color
-	magic, _ := checkMagic(r, "P2")
+	magic, _ := checkMagic(r, pxmParser.getMagic())
 	if magic {
 		// Skip line
 		readRune(r)
@@ -95,7 +95,7 @@ func parse(ppmParser PPMParser, r *bufio.Reader) ([][]Color, error) {
 
 	    for h := 0; h < height; h++ {
 	    	for w := 0; w < width; w++ {
-	    		current_color,_ = ppmParser.nextColor(r);
+	    		current_color,_ = pxmParser.nextColor(r);
 	    		ret[w][h] = current_color
 	    	}
 	    }
@@ -107,10 +107,10 @@ func parse(ppmParser PPMParser, r *bufio.Reader) ([][]Color, error) {
 }
 
 // func parseGray(r *bufio.Reader, next func(r *bufio.Reader) (int)) ([][]int, error) {
-func parseGray(ppmParser PPMParser, r *bufio.Reader) ([][]int, error) {
+func parseGray(pxmParser PXMParser, r *bufio.Reader) ([][]int, error) {
 	var current_int int
 	var current_gray int
-	magic, _ := checkMagic(r, "P2")
+	magic, _ := checkMagic(r, pxmParser.getMagic())
 	if magic {
 		// Skip line
 		readRune(r)
@@ -130,7 +130,7 @@ func parseGray(ppmParser PPMParser, r *bufio.Reader) ([][]int, error) {
 
 	    for h := 0; h < height; h++ {
 	    	for w := 0; w < width; w++ {
-	    		current_gray,_ = ppmParser.nextGray(r)
+	    		current_gray,_ = pxmParser.nextGray(r)
 	    		ret[w][h] = current_gray
 	    	}
 	    }
@@ -155,12 +155,12 @@ func writeGrayImage(fileName string, image [][]int) error {
 
     switch fileType {
     	case "PGM":
-    		pgm := PGMParser{"P6"}
+    		pgm := PGMParser{"P2", []float32{0.3, 0.59, 0.11}}
     		_, err := serializeGray(&pgm, image, writer)
     		return err
     	case "PPM":
-    		pgm := PGMParser{"P6"}
-    		_, err := serializeGray(&pgm, image, writer)
+    		ppm := PPMParser{"P6"}
+    		_, err := serializeGray(&ppm, image, writer)
     		return err
     }
 
@@ -170,11 +170,24 @@ func writeGrayImage(fileName string, image [][]int) error {
 func writeImage(fileName string, image [][]Color) error {
     fileType, _ := parseFileName(fileName)
 
+	fileHandler_write, err := os.Create(fileName)
+	defer fileHandler_write.Close()
+
+    if err != nil {
+        return errors.New("IOException")
+    }
+
+	writer := bufio.NewWriter(fileHandler_write)
+
     switch fileType {
     	case "PGM":
-    		return nil
+    		pgm := PGMParser{"P2", []float32{0.3, 0.59, 0.11}}
+    		_, err := serialize(&pgm, image, writer)
+    		return err
     	case "PPM":
-    		return nil
+    		ppm := PPMParser{"P6"}
+    		_, err := serialize(&ppm, image, writer)
+    		return err
     }
 
     return errors.New("Cannot write data" + fileName)
@@ -225,22 +238,23 @@ func writeInt(value int, w *bufio.Writer) error {
 	return err
 }
 
-func serialize(ppmParser PPMParser, image [][]Color, writer *bufio.Writer) (*bufio.Writer, error) {
-	max := 255;
+func serialize(pxmParser PXMParser, image [][]Color, writer *bufio.Writer) (*bufio.Writer, error) {
+	max := "255";
 
 	width := len(image)
 	height := len(image[0])
 
-	writer.WriteString("P2\n")
+	magic := pxmParser.getMagic()
+	writer.WriteString(magic + "\n")
 
 	writer.WriteString(strconv.Itoa(width) + " ")
 	writer.WriteString(strconv.Itoa(height)  + "\n")
 
-	writer.WriteString(string(max) + "\n")
+	writer.WriteString(max + "\n")
 
 	for h := 0; h < height; h++ {
     	for w := 0; w < width; w++ {
-    		ppmParser.writeColor(image[w][h], writer);
+    		pxmParser.writeColor(image[w][h], writer);
     	}
     	writer.WriteString("\n")
     }
@@ -250,13 +264,14 @@ func serialize(ppmParser PPMParser, image [][]Color, writer *bufio.Writer) (*buf
 	return writer, nil
 }
 
-func serializeGray(ppmParser PPMParser, image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
+func serializeGray(pxmParser PXMParser, image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
 	max := "255";
 
 	width := len(image)
 	height := len(image[0])
 
-	writer.WriteString("P6\n")
+	magic := pxmParser.getMagic()
+	writer.WriteString(magic + "\n")
 
 	writer.WriteString(strconv.Itoa(width) + " ")
 	writer.WriteString(strconv.Itoa(height)  + "\n")
@@ -265,7 +280,7 @@ func serializeGray(ppmParser PPMParser, image [][]int, writer *bufio.Writer) (*b
 
 	for h := 0; h < height; h++ {
     	for w := 0; w < width; w++ {
-    		ppmParser.writeGray(image[w][h], writer);
+    		pxmParser.writeGray(image[w][h], writer);
     		writer.WriteString("\n")
     	}
     }

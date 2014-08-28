@@ -1,12 +1,12 @@
 package main
 
 import (
-		"errors"
 		"bufio"
 )
 
 type PGMParser struct { 
     magic string
+    ratio []float32
 }
 
 func (pgm *PGMParser) getMagic() string {
@@ -35,7 +35,9 @@ func (pgm *PGMParser) nextGray(r *bufio.Reader) (int, error) {
 }
 
 func (pgm *PGMParser) writeColor(c Color, w *bufio.Writer) error {
-	return errors.New("Not implemented yet")
+	val := int(pgm.ratio[0]) * c.r + int(pgm.ratio[1]) * c.g + int(pgm.ratio[2]) * c.b
+	err := writeInt(val, w);
+	return err
 }
 
 func (pgm *PGMParser) writeGray(c int, w *bufio.Writer) error {
