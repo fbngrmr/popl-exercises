@@ -106,7 +106,7 @@ func parse(r *bufio.Reader) ([][]Color, error) {
 func parseGray(r *bufio.Reader) ([][]int, error) {
 	var current_int int
 	var current_gray int
-	magic, _ := checkMagic(r, "P6")
+	magic, _ := checkMagic(r, "P2")
 	if magic {
 		// Skip line
 		readRune(r)
@@ -140,11 +140,22 @@ func parseGray(r *bufio.Reader) ([][]int, error) {
 func writeGrayImage(fileName string, image [][]int) error {
 	fileType, _ := parseFileName(fileName)
 
+	fileHandler_write, err := os.Create(fileName)
+	defer fileHandler_write.Close()
+
+    if err != nil {
+        return errors.New("IOException")
+    }
+
+	writer := bufio.NewWriter(fileHandler_write)
+
     switch fileType {
     	case "PGM":
-    		return nil
+    		_, err := serializeGray(image, writer)
+    		return err
     	case "PPM":
-    		return nil
+    		_, err := serializeGray(image, writer)
+    		return err
     }
 
     return errors.New("Cannot write data" + fileName)
@@ -184,7 +195,7 @@ func nextInt(r *bufio.Reader) (int, error) {
 	ack, err := readRune(r)
 
 	for {
-		if(err == io.EOF || (ack > '0' && ack < '9')) {
+		if(err == io.EOF || (ack >= '0' && ack <= '9')) {
 			break
 		} else {
 			ack, err = readRune(r)
@@ -204,7 +215,7 @@ func nextInt(r *bufio.Reader) (int, error) {
 }
 
 func writeInt(value int, w *bufio.Writer) error {
-	_, err := w.WriteString(" " + strconv.Itoa(value))
+	_, err := w.WriteString(strconv.Itoa(value))
 	return err
 }
 
@@ -214,9 +225,9 @@ func serialize(image [][]Color, w *bufio.Writer) (*bufio.Writer, error) {
 	width := len(image)
 	height := len(image[0])
 
-	w.WriteString("P6\n")
+	w.WriteString("P2\n")
 
-	w.WriteString(strconv.Itoa(width))
+	w.WriteString(strconv.Itoa(width) + " ")
 	w.WriteString(strconv.Itoa(height)  + "\n")
 
 	w.WriteString(string(max) + "\n")
@@ -234,26 +245,47 @@ func serialize(image [][]Color, w *bufio.Writer) (*bufio.Writer, error) {
 }
 
 func serializeGray(image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
-	max := 255;
+	max := "255";
 
 	width := len(image)
 	height := len(image[0])
 
 	writer.WriteString("P6\n")
 
-	writer.WriteString(strconv.Itoa(width))
+	writer.WriteString(strconv.Itoa(width) + " ")
 	writer.WriteString(strconv.Itoa(height)  + "\n")
 
-	writer.WriteString(string(max) + "\n")
+	writer.WriteString(max + "\n")
 
 	for h := 0; h < height; h++ {
     	for w := 0; w < width; w++ {
     		writeGray(image[w][h], writer);
+    		writer.WriteString("\n")
     	}
-    	writer.WriteString("\n")
     }
 
 	writer.Flush()
 
 	return writer, nil
+}
+
+func serializeGrayToString(image [][]int) ([][]string, error) {
+	//max := 255;
+
+	width := len(image)
+	height := len(image[0])
+
+	// 2-dimensional array
+	ret := make([][]string, width)
+	for i := range ret {
+		ret[i] = make([]string, height)
+	}
+
+	for h := 0; h < height; h++ {
+    	for w := 0; w < width; w++ {
+    		ret[w][h] = strconv.Itoa(image[w][h])
+    	}
+    }
+
+	return ret, nil
 }

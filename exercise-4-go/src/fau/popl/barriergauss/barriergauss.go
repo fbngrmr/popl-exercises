@@ -2,6 +2,12 @@ package main
 
 import "fmt"
 
+var src [][]int
+var dest [][]int
+var start int
+var end int
+var runs int
+
 func main() {
 
     // `os.Args` provides access to raw command-line
@@ -16,11 +22,25 @@ func main() {
     //fmt.Println(argsWithoutProg)
     //fmt.Println(arg)
 
-    fileName := "/Users/fg/Documents/len_full.pgm"
+    numThreads := 2
+    run := 1
+    fileName_in := "/Users/fg/Documents/len_full.pgm"
+    fileName_out := "/Users/fg/Documents/len_full_out.pgm"
+
 
     fmt.Println(parseFileName(fileName));
 
-    src,_ := readGrayImage(fileName)
+    src, err := readGrayImage(fileName)
 
-    fmt.Println(len(src))
+    if err != nil {
+        fmt.Println(err)
+    } else {
+
+    }
+
+    err_out := writeGrayImage("/Users/fg/Documents/len_full_out.pgm", src)
+
+    if err_out != nil {
+         fmt.Println(err_out)
+    }
 }
