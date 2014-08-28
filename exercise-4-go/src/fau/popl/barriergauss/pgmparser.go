@@ -5,11 +5,15 @@ import (
 		"bufio"
 )
 
-func getMagic() string {
-	return "P2"
+type PGMParser struct { 
+    magic string
 }
 
-func nextColor(r *bufio.Reader) (Color, error) {
+func (pgm *PGMParser) getMagic() string {
+    return pgm.magic
+}
+
+func (pgm *PGMParser) nextColor(r *bufio.Reader) (Color, error) {
 	var current_int int
 	var err error
 	var color Color
@@ -26,15 +30,15 @@ func nextColor(r *bufio.Reader) (Color, error) {
 	return color, err
 }
 
-func nextGray(r *bufio.Reader) (int, error) {
+func (pgm *PGMParser) nextGray(r *bufio.Reader) (int, error) {
 	return nextInt(r)
 }
 
-func writeColor(c Color) error {
+func (pgm *PGMParser) writeColor(c Color, w *bufio.Writer) error {
 	return errors.New("Not implemented yet")
 }
 
-func writeGray(c int, w *bufio.Writer) error {
+func (pgm *PGMParser) writeGray(c int, w *bufio.Writer) error {
 	err := writeInt(c, w)
 
 	return err

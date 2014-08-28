@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "time"
+    "strconv"
 )
 
 var src [][]int
@@ -70,7 +71,7 @@ func main() {
              fmt.Println("Error 1:")
         } else {
             after := time.Now().Unix()
-            fmt.Println("Running " + string(after - before) + "ms")
+            fmt.Println("Running " + strconv.Itoa(int(after - before)) + "ms")
         }
     } else {
         fmt.Println(err_in)
@@ -78,7 +79,6 @@ func main() {
 }
 
 func run(b *CyclicBarrier, start int, end int) {
-    fmt.Println(len(src))
     for i := 0; i < runs; i++ {
         for x:= start; x < end; x++ {
             for y := 1; y < len(src[x]) - 1; y++ {
@@ -89,9 +89,7 @@ func run(b *CyclicBarrier, start int, end int) {
             }
         }
 
-        println("round:", i)
-
-        b.Await() //all goroutines go through this in the same time
+        b.Await()
 
         if start == 1 {
             tmp := src

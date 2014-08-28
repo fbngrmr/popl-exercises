@@ -37,9 +37,11 @@ func readGrayImage(fileName string) ([][]int, error) {
 
     switch fileType {
     	case "PGM":
-    		return parseGray(reader)
+    		pgm := PGMParser{"P6"}
+    		return parseGray(&pgm, reader)
     	case "PPM":
-    		return parseGray(reader)
+    		pgm := PGMParser{"P6"}
+    		return parseGray(&pgm, reader)
     }
 
     return nil, errors.New("Cannot extract data" + fileName)
@@ -59,9 +61,11 @@ func readImage(fileName string) ([][]Color, error) {
 
     switch fileType {
     	case "PGM":
-    		return parse(reader)
+    		pgm := PGMParser{"P6"}
+    		return parse(&pgm, reader)
     	case "PPM":
-    		return parse(reader)
+    		pgm := PGMParser{"P6"}
+    		return parse(&pgm, reader)
     }
 
     return nil, errors.New("Cannot extract data" + fileName)
@@ -70,7 +74,7 @@ func readImage(fileName string) ([][]Color, error) {
 
 
 // func parse(r *bufio.Reader, next func(r *bufio.Reader) (Color)) ([][]Color, error) {
-func parse(r *bufio.Reader) ([][]Color, error) {
+func parse(ppmParser PPMParser, r *bufio.Reader) ([][]Color, error) {
 	var current_int int
 	var current_color Color
 	magic, _ := checkMagic(r, "P2")
@@ -91,7 +95,7 @@ func parse(r *bufio.Reader) ([][]Color, error) {
 
 	    for h := 0; h < height; h++ {
 	    	for w := 0; w < width; w++ {
-	    		current_color,_ = nextColor(r);
+	    		current_color,_ = ppmParser.nextColor(r);
 	    		ret[w][h] = current_color
 	    	}
 	    }
@@ -103,7 +107,7 @@ func parse(r *bufio.Reader) ([][]Color, error) {
 }
 
 // func parseGray(r *bufio.Reader, next func(r *bufio.Reader) (int)) ([][]int, error) {
-func parseGray(r *bufio.Reader) ([][]int, error) {
+func parseGray(ppmParser PPMParser, r *bufio.Reader) ([][]int, error) {
 	var current_int int
 	var current_gray int
 	magic, _ := checkMagic(r, "P2")
@@ -126,7 +130,7 @@ func parseGray(r *bufio.Reader) ([][]int, error) {
 
 	    for h := 0; h < height; h++ {
 	    	for w := 0; w < width; w++ {
-	    		current_gray,_ = nextGray(r)
+	    		current_gray,_ = ppmParser.nextGray(r)
 	    		ret[w][h] = current_gray
 	    	}
 	    }
@@ -151,10 +155,12 @@ func writeGrayImage(fileName string, image [][]int) error {
 
     switch fileType {
     	case "PGM":
-    		_, err := serializeGray(image, writer)
+    		pgm := PGMParser{"P6"}
+    		_, err := serializeGray(&pgm, image, writer)
     		return err
     	case "PPM":
-    		_, err := serializeGray(image, writer)
+    		pgm := PGMParser{"P6"}
+    		_, err := serializeGray(&pgm, image, writer)
     		return err
     }
 
@@ -219,32 +225,32 @@ func writeInt(value int, w *bufio.Writer) error {
 	return err
 }
 
-func serialize(image [][]Color, w *bufio.Writer) (*bufio.Writer, error) {
+func serialize(ppmParser PPMParser, image [][]Color, writer *bufio.Writer) (*bufio.Writer, error) {
 	max := 255;
 
 	width := len(image)
 	height := len(image[0])
 
-	w.WriteString("P2\n")
+	writer.WriteString("P2\n")
 
-	w.WriteString(strconv.Itoa(width) + " ")
-	w.WriteString(strconv.Itoa(height)  + "\n")
+	writer.WriteString(strconv.Itoa(width) + " ")
+	writer.WriteString(strconv.Itoa(height)  + "\n")
 
-	w.WriteString(string(max) + "\n")
+	writer.WriteString(string(max) + "\n")
 
 	for h := 0; h < height; h++ {
     	for w := 0; w < width; w++ {
-    		writeColor(image[w][h]);
+    		ppmParser.writeColor(image[w][h], writer);
     	}
-    	w.WriteString("\n")
+    	writer.WriteString("\n")
     }
 
-	w.Flush()
+	writer.Flush()
 
-	return w, nil
+	return writer, nil
 }
 
-func serializeGray(image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
+func serializeGray(ppmParser PPMParser, image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
 	max := "255";
 
 	width := len(image)
@@ -259,7 +265,7 @@ func serializeGray(image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
 
 	for h := 0; h < height; h++ {
     	for w := 0; w < width; w++ {
-    		writeGray(image[w][h], writer);
+    		ppmParser.writeGray(image[w][h], writer);
     		writer.WriteString("\n")
     	}
     }
@@ -267,25 +273,4 @@ func serializeGray(image [][]int, writer *bufio.Writer) (*bufio.Writer, error) {
 	writer.Flush()
 
 	return writer, nil
-}
-
-func serializeGrayToString(image [][]int) ([][]string, error) {
-	//max := 255;
-
-	width := len(image)
-	height := len(image[0])
-
-	// 2-dimensional array
-	ret := make([][]string, width)
-	for i := range ret {
-		ret[i] = make([]string, height)
-	}
-
-	for h := 0; h < height; h++ {
-    	for w := 0; w < width; w++ {
-    		ret[w][h] = strconv.Itoa(image[w][h])
-    	}
-    }
-
-	return ret, nil
 }
