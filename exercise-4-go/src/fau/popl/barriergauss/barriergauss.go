@@ -7,8 +7,6 @@ import (
 
 var src [][]int
 var dest [][]int
-var start int
-var end int
 var runs int
 
 func main() {
@@ -28,11 +26,11 @@ func main() {
     fileName_in := "/Users/fg/Documents/len_full.pgm"
     fileName_out := "/Users/fg/Documents/len_full_out.pgm"
 
-    numThreads := 2
+    numThreads := 5
     runs = 5
     barrier := NewCyclicBarrier(numThreads)
-
-    src, err_in := readGrayImage(fileName_in)
+    var err_in error
+    src, err_in = readGrayImage(fileName_in)
 
     if err_in == nil {
         width := len(src)
@@ -40,7 +38,7 @@ func main() {
 
         // Kopiere Rand, da dieser nicht bearbeitet wird
         // 2-dimensional array
-        dest := make([][]int, width)
+        dest = make([][]int, width)
         for i := range dest {
             dest[i] = make([]int, height)
         }
@@ -56,15 +54,15 @@ func main() {
         }
 
         before := time.Now().Unix()
-        start = 1
+        start := 1
         step := width / numThreads
-        end = start + step
 
-        for i := 0; i < numThreads; i++ {
-            go func(start int) {
-                run(barrier)
-            }(i)
+        for i := 0; i < numThreads - 1; i++ {
+            go run(barrier, start, start + step)
+            start += step
         }
+
+        go run(barrier, start, width - 1)
 
         err_out := writeGrayImage(fileName_out, src)
 
@@ -79,22 +77,26 @@ func main() {
     }
 }
 
-func run(b *CyclicBarrier) {
+func run(b *CyclicBarrier, start int, end int) {
+    fmt.Println(len(src))
     for i := 0; i < runs; i++ {
         for x:= start; x < end; x++ {
-            
+            for y := 1; y < len(src[x]) - 1; y++ {
+                    value := src[x - 1][y - 1] + src[x + 1][y - 1] + src[x - 1][y + 1] + src[x + 1][y + 1]
+                    value += 2 * (src[x][y - 1] + src[x - 1][y] + src[x + 1][y] + src[x][y + 1])
+                    value += 4 * src[x][y]
+                    dest[x][y] = value / 16
+            }
         }
+
         println("round:", i)
-        // ... do image manipulation ...
-        //time.Sleep(100 * time.Millisecond)
 
         b.Await() //all goroutines go through this in the same time
 
-        //println("switchImgs")
-
         if start == 1 {
-            // the first thread switches the images for the next iteration step
-            //switchImgs(src, dest)
+            tmp := src
+            src = dest
+            dest = tmp
         }
 
         b.Await()
