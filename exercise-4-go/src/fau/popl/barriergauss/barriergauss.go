@@ -4,6 +4,7 @@ import (
     "fmt"
     "time"
     "strconv"
+    "os"
 )
 
 var src [][]int
@@ -12,23 +13,14 @@ var runs int
 
 func main() {
 
-    // `os.Args` provides access to raw command-line
-    // arguments. Note that the first value in this slice
-    // is the path to the program, and `os.Args[1:]`
-    //argsWithoutProg := os.Args[1:]
+    // `os.Args` provides access to raw command-line arguments
+    argsWithoutProg := os.Args[1:]
 
-    // You can get individual args with normal indexing.
-    //arg := os.Args[3]
+    fileName_in := argsWithoutProg[2]
+    fileName_out := argsWithoutProg[3]
 
-    //fmt.Println(argsWithProg)
-    //fmt.Println(argsWithoutProg)
-    //fmt.Println(arg)
-
-    fileName_in := "/Users/fg/Documents/len_full.pgm"
-    fileName_out := "/Users/fg/Documents/len_full_out.pgm"
-
-    numThreads := 5
-    runs = 5
+    numThreads, _ := strconv.Atoi(argsWithoutProg[0])
+    runs, _ = strconv.Atoi(argsWithoutProg[1])
     barrier := NewCyclicBarrier(numThreads)
     var err_in error
     src, err_in = readGrayImage(fileName_in)
@@ -71,7 +63,7 @@ func main() {
              fmt.Println("Error 1:")
         } else {
             after := time.Now().Unix()
-            fmt.Println("Running " + strconv.Itoa(int(after - before)) + "ms")
+            fmt.Println("running " + strconv.Itoa(int(after - before)) + "ms with " + strconv.Itoa(numThreads) + " threads")
         }
     } else {
         fmt.Println(err_in)
