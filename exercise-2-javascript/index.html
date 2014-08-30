@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script language="javascript" type="text/javascript">
+// Superclass
+function Animal(name, carnivore) {
+  if(Animal.idCounter == undefined){
+    Animal.idCounter = 1;
+  }
+  else{
+    Animal.idCounter++;
+  }
+
+  this.getName = function() {
+  	return name;
+  }
+
+  this.setName = function(value) {
+  	name = value;
+  }
+
+  this.getCarnivore = function() {
+  	return carnivore;
+  }
+
+  this.setCarnivore = function(value) {
+ 	carnivore = value;
+  }
+
+  this.getId = function() {
+	return id;
+  }
+
+  Animal.prototype.generateId = function() {
+  	return Animal.idCounter;
+  }
+
+  var name = name;
+  var carnivore = carnivore;
+  var id = this.generateId()
+}
+
+Animal.prototype.toString = function() {
+	var ret = "";
+	var members = new Map();
+	var getter;
+	var sortedMembers = new Array();
+	for(var property in this) {
+		if(property.indexOf("get") === 0) {
+			getter = property.replace("get","");
+			getter = getter.toLowerCase();
+			members.set(getter, this[property]());
+		}
+	}
+
+	members.forEach(function(value, key) {
+		sortedMembers.push(key + ": " + value);
+	});
+
+	sortedMembers.sort();
+
+	return sortedMembers.join(", ");
+}
+
+// Subclass extends Superclass
+function Mammal(name, carnivore) {
+	Animal.call(this, name, carnivore);
+}
+
+Mammal.prototype = Object.create(Animal.prototype);
+Mammal.prototype.constructor = Mammal;
+
+// Subclass extends Superclass
+function Bird(name, carnivore, wingSpan) {
+	var wingSpan = wingSpan;
+
+	this.getWingSpan= function() {
+  		return wingSpan;
+  	}
+
+  	this.setWingSpan = function(value) {
+ 		wingSpan = value;
+  	}
+
+	Animal.call(this, name, carnivore);
+}
+
+Bird.prototype = Object.create(Animal.prototype);
+Bird.prototype.constructor = Bird;
+
+// Subclass extends Superclass
+function Reptile(name, carnivore, bodyTemperature) {
+	var bodyTemperature = bodyTemperature;
+
+	this.getBodyTemperature = function() {
+  		return bodyTemperature;
+  	}
+
+  	this.setBodyTemperature = function(value) {
+ 		bodyTemperature = value;
+  	}
+
+	Animal.call(this, name, carnivore);
+}
+
+Reptile.prototype = Object.create(Animal.prototype);
+Reptile.prototype.constructor = Reptile;
+
+var mammal = new Mammal("Fabi", false);
+
+var bird = new Bird("Thomas", false, 5);
+
+var reptile = new Reptile("Elen", false, 2.5);
+
+console.log("" + mammal);
+console.log("" + bird);
+console.log("" + reptile);
+</script>
+</body>
+</html> 

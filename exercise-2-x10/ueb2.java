@@ -1,32 +1,34 @@
+package fau.popl.exercise2
+
 public abstract class Animal {
 	protected static int idCounter;
 	private String name;
 	private Boolean carnivore;
 	private String id;
 	
-	public Animal(String name, Boolean carnivore) {
+	public Animal(name:String, carnivore:Boolean) {
 		this.name = name;
 		this.carnivore = carnivore;
 	}
 
-	public String getName() {
+	public def getName():String {
 		return this.name;
 	}
 
-	public void setName(String name) {
+	public def setName(name:String) {
 		this.name = name;
 	}
 
-	public Boolean getCarnivore() {
+	public def getCarnivore():Boolean {
 		return this.carnivore;
 	}
 
-	public void setCarnivore(Boolean carnivore) {
+	public def setCarnivore(carnivore:Boolean) {
 		this.carnivore = carnivore;
 	}
 
 	@Override
-	public String toString() {
+	public def toString():String {
 	    StringBuilder result = new StringBuilder();
 	    String NEW_LINE = System.getProperty("line.separator");
 
