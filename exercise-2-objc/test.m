@@ -16,7 +16,7 @@ static int idCounter = 0;
 
 - (void) setName: (NSString*)input;
 - (void) setCarnivore: (BOOL)input;
-- (id) init;
+- (id)initWithName:(NSString *)name andCarnivore:(BOOL)carnivore;
 - (NSString *) description;
 + (int) generateId;
 @end
@@ -38,6 +38,24 @@ static int idCounter = 0;
 
 - (BOOL) carnivore {
     return carnivore;
+}
+
+- (BOOL)isEqual:(id)other {
+    if (other == self)
+        return YES;
+    if (!other || ![other isKindOfClass:[self class]])
+        return NO;
+    return [self isEqualToAnimal:other];
+}
+
+- (BOOL)isEqualToAnimal:(Animal *)animal {
+    if (self == animal)
+        return YES;
+    if (![(id)[self name] isEqual:[animal name]])
+        return NO;
+    if (![[self data] isEqualToData:[animal data]])
+        return NO;
+    return YES;
 }
 
 - (id)initWithName:(NSString *)name andCarnivore:(BOOL)carnivore {
@@ -73,6 +91,7 @@ static int idCounter = 0;
 @property (nonatomic, assign) double wingSpan;
 
 - (void) setWingSpan: (double)input;
+- (id)initWithName:(NSString *)name andCarnivore:(BOOL)carnivore andWingSpan:(double)wingSpan;
 @end
 
 @implementation Bird
@@ -85,11 +104,11 @@ static int idCounter = 0;
     return wingSpan;
 }
 
-- (id) init
+- (id)initWithName:(NSString *)name andCarnivore:(BOOL)carnivore andWingSpan:(double)wingSpan
 {
-    if ( (self = [super init]) )
+    if ( (self = [super initWithName:name andCarnivore: carnivore]) )
     {
-        [self setWingSpan: 5.0];
+        [self setWingSpan: wingSpan];
     }
     return self;
 }
@@ -114,11 +133,11 @@ static int idCounter = 0;
     return bodyTemperature;
 }
 
-- (id) init
+- (id)initWithName:(NSString *)name andCarnivore:(BOOL)carnivore andBodyTemperature:(double)bodyTemperature
 {
-    if ( (self = [super init]) )
+    if ( (self = [super initWithName:name andCarnivore: carnivore]) )
     {
-        [self setBodyTemperature: 5.0];
+        [self setBodyTemperature: bodyTemperature];
     }
     return self;
 }
@@ -134,12 +153,12 @@ int main(int argc, const char * argv[]) {
         fprintf(stdout, "%s %s\n", property_getName(property), property_getAttributes(property));
     }*/
 
-    Bird *bird = [[Bird alloc]initWithName:@"Raj" andCarnivore: NO];
-    NSLog(@"%@", bird.name);
+    Bird *bird = [[Bird alloc]initWithName:@"Raj" andCarnivore: NO andWingSpan: 23.0];
+    NSLog(@"%f", bird.wingSpan);
     NSLog(@"%f", [bird description]);
 
-    Bird *bird1 = [[Bird alloc]initWithName:@"Raj1" andCarnivore: NO];
-    NSLog(@"%@", bird1.name);
+    Reptile *bird1 = [[Reptile alloc]initWithName:@"Raj1" andCarnivore: NO andBodyTemperature: 14.0];
+    NSLog(@"%f", bird1.bodyTemperature);
     NSLog(@"%f", [bird1 description]);
 
     [pool drain];
