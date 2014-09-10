@@ -1,22 +1,46 @@
 PROGRAM quicksort;
 
+{$mode objfpc}{$H+}
+uses
+  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  cthreads,
+  {$ENDIF}{$ENDIF}
+  Classes;
+
 const
-   max = 800000;
+   max = 10;
 
 TYPE
-   LongIntegerArray = array of longint;
+   IntegerArray = array of integer;
+   ProcPtr = function(left, right : integer): integer;
+
+FUNCTION compareTo(left, right : integer) : integer;
+   BEGIN
+      if left < right then
+         begin
+            exit(-1);
+         end
+      else if left > right then
+         begin
+            exit(1);
+         end
+      else
+         begin
+            exit(0);
+         end
+   END;
 
 { Note: "var" means a is passed by REFERENCE }
-PROCEDURE qsort(var a: LongIntegerArray);
+PROCEDURE qsort(VAR a: IntegerArray; sort_function : ProcPtr);
 { sort array a using quicksort }
 
-   procedure sort(l, r: longint);
+   procedure sort(l, r: integer);
    { local procedure to sort a[l..r] }
    
-      procedure swap(var x, y: longint);
+      procedure swap(var x, y: integer);
       { local procedure to swap x and y. }
          var
-            tmp : longint;
+            tmp : integer;
          begin
             tmp := x;
             x := y;
@@ -24,7 +48,7 @@ PROCEDURE qsort(var a: LongIntegerArray);
          end; { swap }
    
       var
-         i, j, x: longint;
+         i, j, x: integer;
       begin
                
          i := l;
@@ -32,22 +56,23 @@ PROCEDURE qsort(var a: LongIntegerArray);
          x := a[Random(r - l) + l];  
 
          repeat
-            while a[i]<x do
-               i := i+1;
+            while sort_function(a[i], x) < 0 do
+               i := i + 1;
       
-            while x<a[j] do
-               j := j-1;
-            if not(i>j) then
+            while sort_function(a[j], x) > 0 do
+               j := j - 1;
+
+            if not(i > j) then
                begin
                   swap(a[i], a[j]);
-                  i := i+1;
-                  j := j-1;
+                  i := i + 1;
+                  j := j - 1;
                end;
-         until i>j;
+         until i > j;
 
-         if l<j then
+         if l < j then
             sort(l, j);
-         if i<r then
+         if i < r then
             sort(i, r);
          end; { sort }
 
@@ -56,9 +81,8 @@ PROCEDURE qsort(var a: LongIntegerArray);
    end; { qsort }
 
 var
-   data: LongIntegerArray;
-   i: longint;
-
+   data: IntegerArray;
+   i: integer;
 begin
    { Dynamically initialize array }
    SetLength(data, max);
@@ -66,15 +90,17 @@ begin
    write('Creating ',Max,' random numbers between 1 and 500000');
    randomize;
    for i := 1 to max do
-      data[i] := 1 + random(500000);
+      data[i] := 1 + random(100);
    writeln;
    writeln('Sorting...');
-   qsort(data);
-   writeln('Printing the last 100 numbers:');
-   for i := 1 to 100 do
+
+   qsort(data, @compareTo);
+   
+   writeln('Printing the last ',max,' numbers:');
+   for i := 1 to max do
    begin
-      write(data[max-100+i]:7);
+      write(data[i]:7);
       if (i mod 10)=0 then
-   writeln;
+      writeln;
    end;
 end.
