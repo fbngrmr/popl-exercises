@@ -1,121 +1,89 @@
 program binarytree;
 
+
 TYPE
 	TreeNodePtr = ^TreeNode;
 	VisitProcPtr = Procedure(node: TreeNodePtr);
 	TreeNode = RECORD
-		parent : TreeNodePtr;
-		left: TreeNodePtr;
-		right: TreeNodePtr;
-		ID: integer;
-		visit: VisitProcPtr;
+		parent : TreeNodePtr; // pointer to the parent node
+		left: TreeNodePtr; // pointer to the left node
+		right: TreeNodePtr; // pointer to the right node
+		ID: integer; // integer ID of the node
+		visit: VisitProcPtr; // function pointer to functions that have no return value and a pointer to a node
 	END;
 
-PROCEDURE Visit(node: TreeNodePtr);
+// a print-function that can be assigned to the node’s visit function pointer. The
+// function prints the node’s ID on STDOUT seperated by a single whitespace
+PROCEDURE print(node: TreeNodePtr);
 	BEGIN
-		writeln(node^.ID);
+		write(node^.ID, ' ');
 	END;
 
-(* Add Element to the binary search tree. Assumes that no *)
-(* element with the same key exists in the tree. *)
-PROCEDURE InsertElement(VAR Tree : TreeNodePtr; element: integer);
+// Insert new node with ID 'element' at the right place in the tree
+PROCEDURE insertID(VAR Tree : TreeNodePtr; insertID: integer);
 VAR
-	NewNode : TreeNodePtr; (* pointer to new node *)
-	ParentPtr : TreeNodePtr; (* points to new node's parent *)
+	InsertNode : TreeNodePtr;
+	ParentPtr : TreeNodePtr;
 	CurrentNodePtr : TreeNodePtr;
 
-FUNCTION FindNode (Tree : TreeNodePtr; ID : integer) : TreeNodePtr;
-VAR
-	Found : Boolean;
-	CurrentNodePtr : TreeNodePtr;
-	ParentPtr : TreeNodePtr;
 BEGIN
-	(* Set up to search. *)
 	CurrentNodePtr := Tree;
 	ParentPtr := NIL;
-	Found := False;
 
-	(* Search until no more nodes to search or until found. *)
-	WHILE (CurrentNodePtr <> NIL) AND NOT Found DO
-	IF CurrentNodePtr^.ID = ID THEN
-		Found := True
-	ELSE
+	WHILE (CurrentNodePtr <> NIL) DO
+	IF CurrentNodePtr^.ID <> insertID THEN
 	BEGIN
 		ParentPtr := CurrentNodePtr;
 
-		IF CurrentNodePtr^.ID > ID THEN
+		IF CurrentNodePtr^.ID > insertID THEN
 			CurrentNodePtr := CurrentNodePtr^.left
 		ELSE 
 			CurrentNodePtr := CurrentNodePtr^.right
 	END;
 
-	exit(ParentPtr);
+	// Allocate the memory for the nodes dynamically at run-time
+	New (insertNode);
+	insertNode^.parent := ParentPtr;
+	insertNode^.left := NIL;
+	insertNode^.right := NIL;
+	insertNode^.ID := insertID;
+	insertNode^.visit := @print;
+
+	IF ParentPtr = NIL THEN 
+		Tree := InsertNode
+	ELSE
+		IF ParentPtr^.ID > insertID THEN 
+			ParentPtr^.left := insertNode
+		ELSE 
+			ParentPtr^.right := insertNode
 END;
 
-BEGIN (* InsertElement *)
-	(* Create a new node. *)
-	New (NewNode);
-	NewNode^.left := NIL;
-	NewNode^.right := NIL;
-	NewNode^.ID := Element;
-	NewNode^.visit := @Visit;
-
-	(* Search for the insertion place. *)
-	//ParentPtr := FindNode (Tree, element);
-
-	(* Set up to search. *)
-	CurrentNodePtr := Tree;
-	ParentPtr := NIL;
-
-	(* Search until no more nodes to search or until found. *)
-	WHILE (CurrentNodePtr <> NIL) DO
-	IF CurrentNodePtr^.ID = element THEN
-		//Found := True
-	ELSE
-	BEGIN
-		ParentPtr := CurrentNodePtr;
-
-		IF CurrentNodePtr^.ID > element THEN
-			CurrentNodePtr := CurrentNodePtr^.left
-		ELSE 
-			CurrentNodePtr := CurrentNodePtr^.right
-	END;
-
-	(* IF this is first node in tree, set Tree to NewNode; *)
-	(* otherwise, link new node to Node(ParentPtr). *)
-	IF ParentPtr = NIL THEN 
-		Tree := NewNode (* first node in the tree *)
-	ELSE (* Add to the existing tree. *)
-		IF ParentPtr^.ID > element THEN 
-			ParentPtr^.left := NewNode
-		ELSE 
-			ParentPtr^.right := NewNode
-END; (* InsertElement *)
-
-PROCEDURE DepthFirstTraversal(root: TreeNodePtr);
+// Depth first traversal that traverses the tree from its root and invokes the visit method
+// (http://en.wikipedia.org/wiki/Tree_traversal#Depth-first)
+PROCEDURE depthFirstTraversal(root: TreeNodePtr);
 BEGIN 
 	IF root <> NIL THEN
 	BEGIN
 		// Visit the root.
 		root^.visit(root);
-		//Traverse the left subtree.
-		DepthFirstTraversal(root^.left);
-		//Traverse the right subtree.
-		DepthFirstTraversal(root^.right);
+		// Traverse the left subtree.
+		depthFirstTraversal(root^.left);
+		// Traverse the right subtree.
+		depthFirstTraversal(root^.right);
 	END
 END;
 
 VAR
    tree: TreeNodePtr;
 BEGIN
-	writeln('Creating Tree');
+	// Creating empty tree by setting the "root" node to NIL
 	tree := NIL;
 
-	InsertElement(tree, 5);
-	InsertElement(tree, 2);
-	InsertElement(tree, 6);
-	InsertElement(tree, 7);
-	InsertElement(tree, 1);
+	insertID(tree, 5);
+	insertID(tree, 2);
+	insertID(tree, 6);
+	insertID(tree, 7);
+	insertID(tree, 1);
 
-	DepthFirstTraversal(tree);
+	depthFirstTraversal(tree);
 END.
