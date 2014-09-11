@@ -76,7 +76,7 @@ END;
 -- function prints the node’s ID on STDOUT seperated by a single whitespace
 PROCEDURE print(node: TreeNode_Access) is
 BEGIN
-	Ada.Text_IO.Put_Line(To_String(node.all.ID) & ' ');
+	Ada.Text_IO.Put(To_String(node.all.ID) & ' ');
 END;
 
 -- Insert new node with ID 'element' at the right place in the tree
@@ -93,11 +93,8 @@ BEGIN
 			ParentPtr := CurrentNodePtr;
 
 			IF CurrentNodePtr.all.ID > insertID THEN
-				Ada.Text_IO.Put_Line("DEBUG: ID > insertID");
-				Ada.Text_IO.Put_Line(System.Address_Image(CurrentNodePtr.all'address));
 				CurrentNodePtr := CurrentNodePtr.all.left;
 			ELSE 
-				Ada.Text_IO.Put_Line("DEBUG: ID < insertID");
 				CurrentNodePtr := CurrentNodePtr.all.right;
 			END IF;
 		END IF;
@@ -106,22 +103,15 @@ BEGIN
 	-- Allocate the memory for the nodes dynamically at run-time }
 	insertNode := new TreeNode'(ParentPtr, null, null, insertID, print'Access);
 
-	Ada.Text_IO.Put_Line("DEBUG: Inserting ID = " & To_String(insertNode.ID));
-
 	IF ParentPtr = null THEN
-		--Tree := insertNode'Unrestricted_Access;
 		Tree := insertNode;
-		Ada.Text_IO.Put_Line("DEBUG: TREE = " & To_String(Tree.all.ID));
 	ELSE
-		Ada.Text_IO.Put_Line("DEBUG: ParentPtr = " & To_String(ParentPtr.all.ID));
 		IF ParentPtr.all.ID > insertID THEN 
 			ParentPtr.all.left := insertNode;
 		ELSE 
 			ParentPtr.all.right := insertNode;
 		END IF;
 	END IF;
-
-	Ada.Text_IO.Put_Line("----");
 END;
 
 -- Depth first traversal that traverses the tree from its root and invokes the visit method
@@ -130,8 +120,8 @@ PROCEDURE depthFirstTraversal(root: TreeNode_Access) is
 BEGIN 
 	IF root /= null THEN
 		-- Visit the root
-		--root.all.visit.all(root);
-		Ada.Text_IO.Put_Line("DEBUG: Node ID = " & To_String(root.all.ID));
+		root.all.visit.all(root);
+		--Ada.Text_IO.Put_Line("DEBUG: Node ID = " & To_String(root.all.ID));
 		-- Traverse the left subtree
 		depthFirstTraversal(root.all.left);
 		-- Traverse the right subtree
