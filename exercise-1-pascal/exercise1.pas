@@ -77,7 +77,7 @@ BEGIN
 	write(node^.ID, ' ');
 END;
 
-// Insert new node with ID 'element' at the right place in the tree
+{ Insert new node with ID 'element' at the right place in the tree }
 PROCEDURE insertID(VAR Tree : TreeNodePtr; insertID: Integer);
 VAR
 	InsertNode : TreeNodePtr;
