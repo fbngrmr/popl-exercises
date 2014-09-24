@@ -1,3 +1,6 @@
+// Extracted from a Go-port of Java's CyclicBarrier implementation
+// http://stackoverflow.com/a/24879290
+
 package main
 
 import (
