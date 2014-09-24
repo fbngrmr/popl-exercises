@@ -12,12 +12,12 @@ TYPE
 		visit: VisitProcPtr; // function pointer to functions that have no return value and a pointer to a node
 	END;
 
-// a print-function that can be assigned to the node’s visit function pointer. The
+// A print-function that can be assigned to the node’s visit function pointer. The
 // function prints the node’s ID on STDOUT seperated by a single whitespace
 PROCEDURE print(node: TreeNodePtr);
-	BEGIN
-		write(node^.ID, ' ');
-	END;
+BEGIN
+	write(node^.ID, ' ');
+END;
 
 // Insert new node with ID 'element' at the right place in the tree
 PROCEDURE insertID(VAR Tree : TreeNodePtr; insertID: integer);

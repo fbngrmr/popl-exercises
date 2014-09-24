@@ -6,6 +6,24 @@ VAR
 TYPE 
     { Type of the element array. }
     IntegerArray = ARRAY OF Integer;
+    { Function pointer: http://www.gnu-pascal.de/gpc/Pointer-Types.html }
+    ProcPtr = function(left, right : integer): integer;
+
+FUNCTION compareTo(VAR left, right : integer) : integer;
+	BEGIN
+		if left < right then
+		begin
+			compareTo := -1;
+		end
+		else if left > right then
+		begin
+			compareTo := 1;
+		end
+		else
+		begin
+			compareTo := 0;
+		end
+	END;
 
 PROCEDURE swap(VAR a, b: integer);
     VAR
@@ -16,7 +34,7 @@ PROCEDURE swap(VAR a, b: integer);
         b := t;
     END;
 
-PROCEDURE Quicksort(VAR arr : IntegerArray; left : integer; right : integer);
+PROCEDURE Quicksort(VAR arr : IntegerArray; left : integer; right : integer; sort_function : ProcPtr);
     var
         pivot : integer;
         leftIdx : integer;
@@ -36,12 +54,14 @@ PROCEDURE Quicksort(VAR arr : IntegerArray; left : integer; right : integer);
 
                 while leftIdx < rightIdx do
                 begin
-                    while arr[leftIdx] < pivot do
+                    //while arr[leftIdx] < pivot do
+                    while sort_function^(arr[leftIdx], pivot) < 0 do
                     begin
                         leftIdx := leftIdx + 1;
                     end;
 
-                    while arr[rightIdx] > pivot do
+                    //while arr[rightIdx] > pivot do
+                    while sort_function^(arr[rightIdx], pivot) > 0 do
                     begin
                         rightIdx := rightIdx - 1;
                     end;
@@ -58,7 +78,9 @@ PROCEDURE Quicksort(VAR arr : IntegerArray; left : integer; right : integer);
     end;    
 begin
     elements[0] := 2;
-    elements[1] := 1;
+    elements[1] := 9;
+    elements[2] := 1;
+    elements[3] := 5;
 
-    Quicksort(elements, 0, 1);
+    Quicksort(elements, 0, 3, @compareTo);
 end.

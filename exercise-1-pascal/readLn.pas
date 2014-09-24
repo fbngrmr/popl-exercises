@@ -8,12 +8,12 @@ var
 	number: Integer;
 
 type
-   ArrayOfInteger = array of integer;
+   ArrayOfInteger = array of Integer;
 
 { Counts the occurences of separator in str }
-function Occurs(const str, separator: string): Integer; 
+function Occurs(CONST str, separator: string): Integer; 
 	var 
-	  i, nSep: integer;
+	  i, nSep: Integer;
 
 	begin 
 	  nSep:= 0;
@@ -24,10 +24,10 @@ function Occurs(const str, separator: string): Integer;
 	  Occurs:= nSep; 
 	end;
 
-{ Splits string containing integers separated by separator into array of integer }
+{ Splits string containing Integers separated by separator into array of Integer }
 function Split(const str, separator: string): ArrayOfInteger;
 	var 
-	  i, n: integer; 
+	  i, n: Integer; 
 	  strline, strfield: string;
 
 	begin
